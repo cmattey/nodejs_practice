@@ -45,11 +45,20 @@ app.get('/api/persons/:id', (req, res) =>{
   const person = persons.find(p=>p.id===id)
   console.log('person',person)
   if(person){
-      res.status(200).json(person)
+      return res.status(200).json(person)
   }
   else{
-    res.status(404).end()
+    return res.status(404).json({
+      error: 'content missing'
+    })
   }
+})
+
+app.delete('/api/persons/:id', (req, res)=>{
+  const id = Number(req.params.id)
+  persons = persons.filter(p=>p.id!==id)
+
+  res.status(204).end()
 })
 
 const PORT = 3001
