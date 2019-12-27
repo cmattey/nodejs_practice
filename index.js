@@ -1,5 +1,8 @@
 const express = require('express')
 const app = express()
+const bodyParser = require('body-parser')
+
+app.use(bodyParser.json())
 
 let persons = [
   {
@@ -60,6 +63,35 @@ app.delete('/api/persons/:id', (req, res)=>{
 
   res.status(204).end()
 })
+
+// Without a body-parser, the body property would be undefined. The body-parser
+// functions so that it takes the JSON data of a request, transforms it into a
+// JavaScript object and then attaches it to the body property of the request object
+//  before the route handler is called.
+app.post('/api/persons', (req, res)=>{
+  const body = req.body
+  console.log('body',body)
+  if(!body.name || !body.number){
+    return res.status(400).json({
+      error: 'content missing'
+    })
+  }
+
+  const newPerson = {
+    id : generateId(),
+    name : body.name,
+    number : body.number
+  }
+  console.log(newPerson)
+  persons = persons.concat(newPerson)
+  return res.json(newPerson)
+})
+
+const generateId = ()=>{
+  const MAX_ID = 100000
+  const newId = Math.floor(Math.random()*Math.floor(MAX_ID))
+  return newId
+}
 
 const PORT = 3001
 app.listen(PORT, ()=>{
