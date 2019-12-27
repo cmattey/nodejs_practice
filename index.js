@@ -35,7 +35,7 @@ app.get('/api/persons', (req, res) => {
   res.json(persons)
 })
 
-app.get('/info', (req, res) =>{
+app.get('/api/info', (req, res) =>{
   res.set('Content-Type', 'text/html')
   res.write(String(new Date()))
   res.write('<br />')
@@ -74,6 +74,14 @@ app.post('/api/persons', (req, res)=>{
   if(!body.name || !body.number){
     return res.status(400).json({
       error: 'content missing'
+    })
+  }
+
+  found = persons.filter(p=>p.name.toLowerCase()===body.name.toLowerCase())
+  console.log(found)
+  if(found.length>0){
+    return res.status(400).json({
+      error: 'name must be unique'
     })
   }
 
