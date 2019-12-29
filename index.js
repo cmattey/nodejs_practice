@@ -1,8 +1,10 @@
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
+const morgan = require('morgan')
 
 app.use(bodyParser.json())
+app.use(morgan('tiny'))
 
 let persons = [
   {
@@ -69,6 +71,7 @@ app.delete('/api/persons/:id', (req, res)=>{
 // JavaScript object and then attaches it to the body property of the request object
 //  before the route handler is called.
 app.post('/api/persons', (req, res)=>{
+  console.log("request",req)
   const body = req.body
   console.log('body',body)
   if(!body.name || !body.number){
