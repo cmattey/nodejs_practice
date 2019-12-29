@@ -4,7 +4,21 @@ const bodyParser = require('body-parser')
 const morgan = require('morgan')
 
 app.use(bodyParser.json())
-app.use(morgan('tiny'))
+// app.use(morgan('tiny'))
+
+morgan.token('body')
+
+app.use(morgan((tokens, req, res)=>{
+  return (
+    [tokens.method(req,res),
+    tokens.url(req, res),
+    tokens.status(req, res),
+    tokens.res(req, res, 'content-length'), '-',
+    tokens['response-time'](req, res), 'ms',
+    tokens.method(req,res)=='POST'?JSON.stringify(req['body']):''].join(' ')
+
+  )
+}))
 
 let persons = [
   {
@@ -34,7 +48,7 @@ app.get('/', (req, res) =>{
 })
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons)
+  res.status(200).json(persons)
 })
 
 app.get('/api/info', (req, res) =>{
@@ -48,7 +62,7 @@ app.get('/api/info', (req, res) =>{
 app.get('/api/persons/:id', (req, res) =>{
   const id = Number(req.params.id)
   const person = persons.find(p=>p.id===id)
-  console.log('person',person)
+  // console.log('person',person)
   if(person){
       return res.status(200).json(person)
   }
@@ -71,9 +85,9 @@ app.delete('/api/persons/:id', (req, res)=>{
 // JavaScript object and then attaches it to the body property of the request object
 //  before the route handler is called.
 app.post('/api/persons', (req, res)=>{
-  console.log("request",req)
+  // console.log("request",req)
   const body = req.body
-  console.log('body',body)
+  // console.log('body',body)
   if(!body.name || !body.number){
     return res.status(400).json({
       error: 'content missing'
@@ -81,7 +95,7 @@ app.post('/api/persons', (req, res)=>{
   }
 
   found = persons.filter(p=>p.name.toLowerCase()===body.name.toLowerCase())
-  console.log(found)
+  // console.log(found)
   if(found.length>0){
     return res.status(400).json({
       error: 'name must be unique'
@@ -93,7 +107,7 @@ app.post('/api/persons', (req, res)=>{
     name : body.name,
     number : body.number
   }
-  console.log(newPerson)
+  // console.log(newPerson)
   persons = persons.concat(newPerson)
   return res.json(newPerson)
 })
