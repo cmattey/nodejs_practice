@@ -1,8 +1,10 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
+const Contact = require('./models/contact')
 
 app.use(bodyParser.json())
 app.use(cors())
@@ -51,7 +53,10 @@ app.get('/', (req, res) =>{
 })
 
 app.get('/api/persons', (req, res) => {
-  res.status(200).json(persons)
+  // res.status(200).json(persons)
+  Contact.find({}).then(contacts => {
+    res.json(contacts.map(contact => contact.toJSON()))
+  })
 })
 
 app.get('/api/info', (req, res) =>{
@@ -63,17 +68,34 @@ app.get('/api/info', (req, res) =>{
 })
 
 app.get('/api/persons/:id', (req, res) =>{
-  const id = Number(req.params.id)
-  const person = persons.find(p=>p.id===id)
-  // console.log('person',person)
-  if(person){
-      return res.status(200).json(person)
-  }
-  else{
-    return res.status(404).json({
-      error: 'content missing'
+  // const id = Number(req.params.id)
+
+  Contact.findById(req.params.id)
+    .then(contact => {
+      if (contact) {
+        res.status(200).json(contact.toJSON())
+      }
+      else {
+        res.status(404).end()
+      }
+  })
+    .catch((error) => {
+      console.log(error)
+      res.status(400).json({
+        error: 'malformatted id'
+      })
     })
-  }
+
+  // const person = persons.find(p=>p.id===id)
+  // // console.log('person',person)
+  // if(person){
+  //     return res.status(200).json(person)
+  // }
+  // else{
+  //   return res.status(404).json({
+  //     error: 'content missing'
+  //   })
+  // }
 })
 
 app.delete('/api/persons/:id', (req, res)=>{
@@ -105,14 +127,18 @@ app.post('/api/persons', (req, res)=>{
     })
   }
 
-  const newPerson = {
-    id : generateId(),
+  const newContact = new Contact({
+    // id : generateId(),
     name : body.name,
     number : body.number
-  }
+  })
   // console.log(newPerson)
-  persons = persons.concat(newPerson)
-  return res.json(newPerson)
+  // persons = persons.concat(newContact)
+
+newContact.save().then(savedContact => {
+  res.json(savedContact.toJSON())
+  })
+  // return res.json(newPerson)
 })
 
 const generateId = ()=>{
