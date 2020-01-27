@@ -99,10 +99,13 @@ app.get('/api/persons/:id', (req, res) =>{
 })
 
 app.delete('/api/persons/:id', (req, res)=>{
-  const id = Number(req.params.id)
-  persons = persons.filter(p=>p.id!==id)
 
-  res.status(204).end()
+  Contact.findByIdAndRemove(req.params.id)
+    .then(result => {
+      res.status(204).end()
+    })
+    .catch(error => next(error))
+
 })
 
 // Without a body-parser, the body property would be undefined. The body-parser
@@ -145,6 +148,15 @@ const generateId = ()=>{
   const MAX_ID = 100000
   const newId = Math.floor(Math.random()*Math.floor(MAX_ID))
   return newId
+}
+
+const errorHandler = (error, request, response, next) => {
+
+  if (error.name === 'Casterror' && error.kind === 'ObjectId'){
+    return response.status(400).send({ error: 'malformatted id'})
+  }
+
+  next(error)
 }
 
 const PORT = process.env.PORT || 3002
