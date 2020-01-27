@@ -67,7 +67,7 @@ app.get('/api/info', (req, res) =>{
   return res.status(200).send()
 })
 
-app.get('/api/persons/:id', (req, res) =>{
+app.get('/api/persons/:id', (req, res, next) =>{
   // const id = Number(req.params.id)
 
   Contact.findById(req.params.id)
@@ -79,12 +79,7 @@ app.get('/api/persons/:id', (req, res) =>{
         res.status(404).end()
       }
   })
-    .catch((error) => {
-      console.log(error)
-      res.status(400).json({
-        error: 'malformatted id'
-      })
-    })
+    .catch(error => next(error))
 
   // const person = persons.find(p=>p.id===id)
   // // console.log('person',person)
@@ -98,7 +93,7 @@ app.get('/api/persons/:id', (req, res) =>{
   // }
 })
 
-app.delete('/api/persons/:id', (req, res)=>{
+app.delete('/api/persons/:id', (req, res, next)=>{
 
   Contact.findByIdAndRemove(req.params.id)
     .then(result => {
@@ -113,9 +108,7 @@ app.delete('/api/persons/:id', (req, res)=>{
 // JavaScript object and then attaches it to the body property of the request object
 //  before the route handler is called.
 app.post('/api/persons', (req, res)=>{
-  // console.log("request",req)
   const body = req.body
-  // console.log('body',body)
   if(!body.name || !body.number){
     return res.status(400).json({
       error: 'content missing'
@@ -123,7 +116,6 @@ app.post('/api/persons', (req, res)=>{
   }
 
   found = persons.filter(p=>p.name.toLowerCase()===body.name.toLowerCase())
-  // console.log(found)
   if(found.length>0){
     return res.status(400).json({
       error: 'name must be unique'
@@ -131,17 +123,13 @@ app.post('/api/persons', (req, res)=>{
   }
 
   const newContact = new Contact({
-    // id : generateId(),
     name : body.name,
     number : body.number
   })
-  // console.log(newPerson)
-  // persons = persons.concat(newContact)
 
 newContact.save().then(savedContact => {
   res.json(savedContact.toJSON())
   })
-  // return res.json(newPerson)
 })
 
 const generateId = ()=>{
@@ -152,12 +140,14 @@ const generateId = ()=>{
 
 const errorHandler = (error, request, response, next) => {
 
-  if (error.name === 'Casterror' && error.kind === 'ObjectId'){
+  if (error.name === 'CastError' && error.kind === 'ObjectId'){
     return response.status(400).send({ error: 'malformatted id'})
   }
 
   next(error)
 }
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3002
 app.listen(PORT, ()=>{
