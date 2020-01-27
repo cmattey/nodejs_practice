@@ -107,20 +107,8 @@ app.delete('/api/persons/:id', (req, res, next)=>{
 // functions so that it takes the JSON data of a request, transforms it into a
 // JavaScript object and then attaches it to the body property of the request object
 //  before the route handler is called.
-app.post('/api/persons', (req, res)=>{
+app.post('/api/persons', (req, res, next)=>{
   const body = req.body
-  if(!body.name || !body.number){
-    return res.status(400).json({
-      error: 'content missing'
-    })
-  }
-
-  found = persons.filter(p=>p.name.toLowerCase()===body.name.toLowerCase())
-  if(found.length>0){
-    return res.status(400).json({
-      error: 'name must be unique'
-    })
-  }
 
   const newContact = new Contact({
     name : body.name,
@@ -130,18 +118,25 @@ app.post('/api/persons', (req, res)=>{
 newContact.save().then(savedContact => {
   res.json(savedContact.toJSON())
   })
+  .catch(error => {
+      console.log(error.message)
+      next(error)
+  })
 })
 
-const generateId = ()=>{
-  const MAX_ID = 100000
-  const newId = Math.floor(Math.random()*Math.floor(MAX_ID))
-  return newId
-}
+// const generateId = ()=>{
+//   const MAX_ID = 100000
+//   const newId = Math.floor(Math.random()*Math.floor(MAX_ID))
+//   return newId
+// }
 
 const errorHandler = (error, request, response, next) => {
 
   if (error.name === 'CastError' && error.kind === 'ObjectId'){
     return response.status(400).send({ error: 'malformatted id'})
+  }
+  else if( error.name === 'ValidationError' ){
+    return response.status(400).json({ error: error.message})
   }
 
   next(error)
